@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+  <html lang="en">
+
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Data Dash</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  </head>
+
+  <body>
+
+    <h1>Aggregate User Data Goes Here</h1>
+    <p> Includes list of users in user database, amount of paints used, amount of products processed, 
+      average time spent per product, individual user stats...
+    </p>
+    <a href="{{url_for('main.logout')}}">Click to log out.</a>
+
+       <table border="1">
+        <tr>
+            <th>First Name</th>
+            <th>Last Name</th>
+            <th>Username</th>
+            <th>Email Address</th>
+            <th>Role</th>
+        </tr>
+        {% for user in users %}
+        <tr>
+            <td>{{ user.first }}</td>
+            <td>{{ user.last }}</td>
+            <td>{{ user.username }}</td>
+            <td>{{ user.email}}</td>
+            <td>{{ user.role }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    
+  </body>
