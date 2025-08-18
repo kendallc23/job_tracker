@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField
-from wtforms.validators import InputRequired, Length, ValidationError
+from wtforms.validators import InputRequired, Length, ValidationError, DataRequired, EqualTo
 from models import User
 
 # create Registration Form
@@ -56,3 +56,25 @@ class LoginForm(FlaskForm):
 
     # submit button
     submit = SubmitField("Login")
+
+
+# create password reset forms
+class PasswordResetRequestForm(FlaskForm):
+    # email - string between 6 and 100 chars, required field
+    email = StringField(validators=[InputRequired(), Length(
+        min=6, max=100)], render_kw={"placeholder": "email address"})
+
+    # submit button
+    submit = SubmitField("Send Reset Link")
+
+
+class PasswordResetForm(FlaskForm):
+    # enter new passwords
+    password = PasswordField("New Password", validators=[InputRequired(), Length(
+        min=4, max=20)], render_kw={"placeholder": "new password"})
+
+    password2 = PasswordField("Repeat Password", validators=[InputRequired(
+    ), EqualTo("password")], render_kw={"placeholder": "new password"})
+
+    # submit button
+    submit = SubmitField("Confirm Password Reset")

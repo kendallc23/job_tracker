@@ -1,8 +1,10 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask import Blueprint, render_template, redirect, url_for, flash, request, render_template_string
 from extensions import db, bcrypt, login_manager
 from models import User
-from forms import RegisterForm, LoginForm
+from forms import RegisterForm, LoginForm, PasswordResetRequestForm, PasswordResetForm
 from flask_login import login_user, login_required, logout_user, current_user
+from flask_mailman import EmailMessage
+from reset_pass_html_content import email_html_content
 
 
 main = Blueprint("main", __name__)
@@ -47,6 +49,66 @@ def logout():
 @login_required
 def job_data():
     return render_template('job_data.html')
+
+
+###### Request and Reset Password ######
+def send_reset_password_email(user):
+    # create reset password url with unique token
+    reset_pass_url = url_for('main.reset_password',
+                             token=user.generate_password_token(),
+                             user_id=user.id,
+                             _external=True)
+    # create email message containing special url
+    email_body = render_template_string(email_html_content,
+                                        reset_pass_url=reset_pass_url)
+    msg = EmailMessage(subject="Password Reset",
+                       body=email_body,
+                       to=[user.email])
+    msg.content_subtype = "html"
+    # sends message to email address input by user
+    msg.send()
+
+
+@main.route("/request_new_pass", methods=['GET', 'POST'])
+def request_new_pass():
+    form = PasswordResetRequestForm()
+    # check if email corresponds to an existing user...
+
+    if form.validate_on_submit():
+        user = User.query.filter_by(email=form.email.data).first()
+
+        # if so, send password reset link
+        if user:
+            send_reset_password_email(user)
+
+        # direct user to check email for link
+        flash("Instructions to reset your password were sent to your email address, if it exists in our system.")
+
+        return redirect(url_for("main.request_new_pass"))
+
+    return render_template('request_new_pass.html', form=form)
+
+
+@main.route('/reset_password/<token>/<int:user_id>', methods=['GET', 'POST'])
+def reset_password(token, user_id):
+    # validate password reset token
+    user = User.validate_reset_pass_token(token, user_id)
+    #   error if unable to validate
+    if user is None:
+        return render_template('reset_pass_error.html')
+    # take new password from form; hash password; update database
+    form = PasswordResetForm()
+
+    if form.validate_on_submit():
+        # create hash encoding for new password and update user database with this value
+        hashed_new_password = bcrypt.generate_password_hash(form.password.data)
+        user.password = hashed_new_password
+        db.session.commit()
+        return render_template('reset_pass_success.html')
+
+    # reset password page (pre submission)
+    return render_template('reset_password.html', form=form)
+
 
 ##### Application Routing (User Features) #####
 

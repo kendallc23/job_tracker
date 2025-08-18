@@ -4,16 +4,16 @@ from flask import Flask, render_template, url_for, redirect, flash
 from models import User
 from extensions import db, bcrypt, login_manager
 from routes import main
-import os
+from config import Config
 from dotenv import load_dotenv
+from flask_mailman import Mail
 
 
-# create flask app
+# create flask app (all app configurations take place here with app setup)
 app = Flask(__name__)
+app.config.from_object(Config)
 
-# connect app to database and configure secret key
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DATABASE_URI")
-app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY")
+mailman = Mail(app)
 
 # initialize db, password encryption and login manager
 db.init_app(app)

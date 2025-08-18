@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Request Password Reset Page</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+
+<body>
+
+  <h1>Request Password Reset Page</h1>
+  <form method="POST" action="" novalidate>
+    {{  form.hidden_tag() }}
+    {{ form.email }} <br><br>
+    <p>
+      {% with messages = get_flashed_messages() %}
+        {% if messages %}
+          {% for message in messages %}
+          <p> style = "color:green;"{{message}}</p>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+    <p>
+    {{ form.submit }} <br><br>
+  </form>
+
+  <a href="{{url_for('main.login')}}">Return to Login</a> <br><br>
+</body>
