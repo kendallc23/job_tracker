@@ -24,7 +24,7 @@ The application consists of user authentication, data collection for company job
 2. Create and activate a Python environment (I usually use Anaconda).
 3. Install dependencies:
    ``` pip install -r requirements.txt ```
-4. Configure environment variables by filling out the .env.example file.
+4. Configure environment variables by filling out the .env file template.
 5. Run the application:
    ```flask run```
 
