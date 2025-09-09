@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField
+from wtforms import StringField, PasswordField, SubmitField, SelectField, IntegerField, FloatField
 from wtforms.validators import InputRequired, Length, ValidationError, DataRequired, EqualTo
 from models import User
 
@@ -78,3 +78,24 @@ class PasswordResetForm(FlaskForm):
 
     # submit button
     submit = SubmitField("Confirm Password Reset")
+
+
+# create job data form
+class JobDataForm(FlaskForm):
+    part_id = SelectField('Part', choices=[], validators=[InputRequired()])
+    num_batches = IntegerField(
+        'Number of batches', validators=[InputRequired()])
+    num_per_batch = IntegerField(
+        'Number of parts per batch', validators=[InputRequired()])
+    task = SelectField('Task', choices=[
+                       'pre-treatment', 'masking', 'painting', 'curing'], validators=[InputRequired()])
+    paint_type = SelectField('Paint type', choices=['powder', 'liquid', 'N/A'])
+    # submit = SubmitField('Start Stopwatch')
+
+
+class NewPartForm(FlaskForm):
+    part_name = StringField(validators=[InputRequired(), Length(
+        min=1, max=100)], render_kw={"placeholder": "part name"})
+    surface_area = FloatField(
+        'Surface Area (square inches)', validators=[DataRequired()], render_kw={"placeholder": "surface area"})
+    submit = SubmitField('Add New Part')

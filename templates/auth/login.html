@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login Page</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+
+<body>
+
+  <h1>Login</h1>
+
+  <div class= login-container>
+
+      <form method="POST" action="">
+        {{ form.hidden_tag() }}
+
+        <div class="form_group">
+          <label for="username">User Name: </label>
+          {{ form.username      }}
+        </div>
+
+        <div class="form_group">
+          <label for="password">Password: </label>
+          {{ form.password     }}
+        </div>
+
+        {{ form.submit }} 
+      </form>
+
+      <div class ="forgot-password">
+        <a href="{{url_for('main.request_new_pass')}}">Forgot Password?</a> <br><br>
+      </div>
+
+    </div>
+
+</body>
+</html>

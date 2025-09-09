@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, render_template_string
 from extensions import db, bcrypt, login_manager
-from models import User
-from forms import RegisterForm, LoginForm, PasswordResetRequestForm, PasswordResetForm
+from models import User, Part, Job
+from forms import RegisterForm, LoginForm, PasswordResetRequestForm, PasswordResetForm, JobDataForm, NewPartForm
 from flask_login import login_user, login_required, logout_user, current_user
 from flask_mailman import EmailMessage
 from reset_pass_html_content import email_html_content
@@ -35,7 +35,7 @@ def login():
                 if user.role == "user":
                     return redirect(url_for("main.user_dash"))
 
-    return render_template('login.html', form=form)
+    return render_template('auth/login.html', form=form)
 
 
 @main.route('/logout', methods=['GET', 'POST'])
@@ -48,7 +48,45 @@ def logout():
 @main.route('/job_data', methods=['GET', 'POST'])
 @login_required
 def job_data():
-    return render_template('job_data.html')
+    parts = Part.query.all()
+    part_choices = [(str(p.id), p.part_name) for p in parts]
+    form = JobDataForm()
+    form.part_id.choices = part_choices
+    if request.method == 'POST':
+        # get data from hidden form
+        part_id = request.form.get('part_id')
+        num_batches = int(request.form.get('num_batches'))
+        num_per_batch = int(request.form.get('num_per_batch'))
+        task = request.form.get('task')
+        paint_type = request.form.get('paint_type')
+        total_time = float(request.form.get('total_time'))
+        avg_time_per_batch = float(request.form.get('avg_time_per_batch'))
+        avg_time_per_part = float(request.form.get('avg_time_per_part'))
+
+        # get part name
+        part = Part.query.get(part_id)
+        part_name = part.part_name if part else None
+
+        # save data to Job table
+        new_job = Job(
+            user_id=current_user.id,
+            part_id=part_id,
+            part_name=part_name,
+            num_batches=num_batches,
+            num_per_batch=num_per_batch,
+            task=task,
+            paint_type=paint_type,
+            total_time=total_time,
+            avg_time_per_batch=avg_time_per_batch,
+            avg_time_per_part=avg_time_per_part
+        )
+        db.session.add(new_job)
+        db.session.commit()
+        flash("Job data saved!")
+        if current_user.role == "admin":
+            return redirect(url_for('main.admin_dash'))
+        return redirect(url_for('main.user_dash'))
+    return render_template('data/job_data.html', form=form)
 
 
 ###### Request and Reset Password ######
@@ -86,7 +124,7 @@ def request_new_pass():
 
         return redirect(url_for("main.request_new_pass"))
 
-    return render_template('request_new_pass.html', form=form)
+    return render_template('auth/request_new_pass.html', form=form)
 
 
 @main.route('/reset_password/<token>/<int:user_id>', methods=['GET', 'POST'])
@@ -107,7 +145,7 @@ def reset_password(token, user_id):
         return render_template('reset_pass_success.html')
 
     # reset password page (pre submission)
-    return render_template('reset_password.html', form=form)
+    return render_template('auth/reset_password.html', form=form)
 
 
 ##### Application Routing (User Features) #####
@@ -116,18 +154,25 @@ def reset_password(token, user_id):
 @main.route('/user_dash', methods=['GET', 'POST'])
 @login_required
 def user_dash():
-    return render_template('user_dash.html')
+    return render_template('dash/user_dash.html')
 
 
 ##### Application Routing (Admin Features) #####
 @main.route('/admin_dash', methods=['GET', 'POST'])
 @login_required
 def admin_dash():
-    return render_template('admin_dash.html')
+    if current_user.role != "admin":
+        flash("Access denied.")
+        return redirect(url_for('main.user_dash'))
+    return render_template('dash/admin_dash.html')
 
 
 @main.route('/register', methods=['GET', 'POST'])
+@login_required
 def register():
+    if current_user.role != "admin":
+        flash("Access denied.")
+        return redirect(url_for('main.user_dash'))
     form = RegisterForm()
 
     # create new user in database
@@ -141,21 +186,63 @@ def register():
                         role=form.role.data)
         db.session.add(new_user)
         db.session.commit()
-        return redirect(url_for("main.login"))
+        # redirect to list of users
+        return redirect(url_for("main.overview_data"))
 
-    # redirect to login page
+    return render_template('auth/register.html', form=form)
 
-    return render_template('register.html', form=form)
+
+@main.route('/new_part', methods=['GET', 'POST'])
+@login_required
+def new_part():
+    if current_user.role != "admin":
+        flash("Access denied.")
+        return redirect(url_for('main.user_dash'))
+
+    form = NewPartForm()
+
+    # create new part to add to Part table
+    if form.validate_on_submit():
+        new_part = Part(part_name=form.part_name.data,
+                        surface_area=form.surface_area.data)
+        db.session.add(new_part)
+        db.session.commit()
+        # redirect to admin dashboard
+        return redirect(url_for("main.admin_dash"))
+
+    return render_template('data/new_part.html', form=form)
 
 
 @main.route('/overview_data', methods=['GET', 'POST'])
 @login_required
 def overview_data():
+    if current_user.role != "admin":
+        flash("Access denied.")
+        return redirect(url_for('main.user_dash'))
+
     users = User.query.all()
-    return render_template('overview_data.html', users=users)
+    parts = Part.query.all()
+    jobs = Job.query.all()
+    return render_template('data/overview_data.html', users=users, parts=parts, jobs=jobs)
+
+
+@main.route('/edit_user/<int:user_id>', methods=['POST'])
+@login_required
+def edit_user(user_id):
+    user = User.query.get_or_404(user_id)
+    action = request.form['action']
+    if action == "toggle_role":
+        user.role = "admin" if user.role == "user" else "user"
+    if action == "update_email":
+        user.email = request.form["email"]
+    db.session.commit()
+    return redirect(url_for("main.overview_data"))
 
 
 @main.route('/estimate', methods=['GET', 'POST'])
 @login_required
 def estimate():
-    return render_template('estimate.html')
+    if current_user.role != "admin":
+        flash("Access denied.")
+        return redirect(url_for('main.user_dash'))
+    return render_template('data/estimate.html')

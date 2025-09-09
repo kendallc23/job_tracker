@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en"> 
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Collection Tool</title>
+    <!-- <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}"> -->
+    <style>
+        #stopwatchSection { display: none; }
+        #timerDisplay { font-size: 2em; margin: 10px 0; }
+    </style>
+</head>
+<body>
+  
+ <h1>Job Data Collection Tool</h1>
+
+ <!-- Form Section -->
+ <form method = "POST" action="" id="jobForm">
+      {{  form.hidden_tag()  }}
+
+      <label> Part Name: {{ form.part_id() }}</label> <br><br>
+      <label> Number of Batches: {{  form.num_batches  }}</label> <br><br>
+      <label> Number of Parts per Batch: {{  form.num_per_batch  }} </label> <br><br>
+      <label> Task: {{  form.task }} </label> <br><br>
+      <label> Paint Type: {{  form.paint_type  }} </label><br><br>
+      <button type="button" id="startBtn">Start Job</button>
+ </form>
+
+ <!-- Stopwatch Section -->
+ <div id ="stopwatchSection">
+    <div id = "timerDisplay">00:00:00</div>
+    <button type="button" id="nextBatchBtn">Next Batch</button>
+    <button type="button" id="finishBtn">Finish</button>
+    <div id="lapTimes"></div>
+
+    <!-- Hidden form to submit all data -->
+    <form id="finalForm" method="POST" style="display:none;">
+        <input type="hidden" name="part_id" id="finalPartId">
+        <input type="hidden" name="num_batches" id="finalNumBatches">
+        <input type="hidden" name="num_per_batch" id="finalNumPerBatch">
+        <input type="hidden" name="task" id="finalTask">
+        <input type="hidden" name="paint_type" id="finalPaintType">
+        <!--<input type="hidden" name="lap_times" id="finalLapTimes">-->
+        <input type="hidden" name="total_time" id="finalTotalTime">
+        <input type="hidden" name="avg_time_per_batch" id="finalAvgBatch">
+        <input type="hidden" name="avg_time_per_part" id="finalAvgPart">
+    </form>
+
+ </div>
+
+ <script>
+    // Global Variables
+    let lapTimes = [] // store recorded times for each Batch
+    let batchCount = 1 // track number of completed batches
+    let startTime, timerInterval; // start time of current batch and interval at which timer updates
+
+
+    // Functions
+    function startBatch(){
+        startTime = Date.now();
+        timerInterval = setInterval(updateTimer, 100);
+        document.getElementById('timerDisplay').textContent = "00:00:00";
+    }
+
+    function recordLap() {
+        let lap = Math.floor((Date.now() - startTime)/1000); // JavaScript records time in milliseconds -- divide by 1000 to measure seconds
+        // add lap time to initialized list 
+        lapTimes.push(lap);
+        // stop timer
+        clearInterval(timerInterval);
+    }
+
+    function updateTimer(){
+        let now = Date.now();
+        let elapsed = Math.floor((now - startTime) / 1000);
+        let hours = Math.floor(elapsed/3600);
+        let minutes = Math.floor((elapsed % 3600) / 60);
+        let seconds = elapsed % 60;
+        document.getElementById('timerDisplay').textContent =
+            `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+    }
+
+    function pad(num) {
+        // pad string with zeros until it reaches len of 2
+        return num.toString().padStart(2, '0');
+    }
+
+    // Start Job
+    document.getElementById('startBtn').onclick = function() {
+        // hide form, show stopwatch
+        document.getElementById('jobForm').style.display = "none";
+        document.getElementById('stopwatchSection').style.display = "block";
+        // reset global variables and start time (maybe)
+        // batchCount = 0
+        //lapTimes = []
+        startBatch()
+
+    };
+
+
+    // Next Batch
+    document.getElementById('nextBatchBtn').onclick = function() {
+        recordLap();
+        batchCount++;
+        startBatch();
+    };
+
+    // Finish
+    document.getElementById('finishBtn').onclick = function(){
+        // record final lap
+        recordLap();
+        clearInterval(timerInterval);
+        console.log("final lap recorded")
+
+        // calculate summary stats (times in sec)
+
+        // total time
+        let totalTime = lapTimes.reduce((a,b) => a+b, 0);
+        // average time per batch
+        let batchTime = totalTime/lapTimes.length;
+        // number of parts per batch, total parts, average time per part;
+        let batchParts = parseInt(document.getElementById('jobForm').num_per_batch.value);
+        let numParts = batchParts * lapTimes.length;
+        let partTime = totalTime/numParts;
+
+        // Show lap times
+        document.getElementById('lapTimes').textContent = "Lap times (seconds): " + lapTimes.join(", ");
+
+        // Fill hidden form and submit
+        document.getElementById('finalPartId').value = document.getElementById('jobForm').part_id.value;
+        document.getElementById('finalNumBatches').value = document.getElementById('jobForm').num_batches.value;
+        document.getElementById('finalNumPerBatch').value = document.getElementById('jobForm').num_per_batch.value;
+        document.getElementById('finalTask').value = document.getElementById('jobForm').task.value;
+        document.getElementById('finalPaintType').value = document.getElementById('jobForm').paint_type.value;
+        //document.getElementById('finalLapTimes').value = JSON.stringify(lapTimes);
+        document.getElementById('finalTotalTime').value = totalTime;
+        document.getElementById('finalAvgBatch').value = batchTime;
+        document.getElementById('finalAvgPart').value = partTime;
+        console.log("Submitting form...");
+        document.getElementById('finalForm').submit();
+    };
+
+
+
+ </script>     
+</body>
+</html>

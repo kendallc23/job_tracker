@@ -5,3 +5,4 @@ instance/
 .env
 .vscode/
 tracker_cli.py
+static/

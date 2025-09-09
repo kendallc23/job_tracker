@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+  <html lang="en">
+
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Data Dash</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  </head>
+
+  <body>
+
+    <h1>Data Dashboard (to include relevant tables and visualizations)</h1>
+    <p> Will include list of users in user database, amount of paints used, amount of products processed, 
+      average time spent per product, individual user stats...
+    </p>
+
+    <a href="{{url_for('main.logout')}}">Click to log out.</a>
+    <h2> USER DATA</h2>
+       <table border="1">
+        <tr>
+            <th>First Name</th>
+            <th>Last Name</th>
+            <th>Username</th>
+            <th>Email Address</th>
+            <th>Role</th>
+            <th>Edit</th>
+        </tr>
+        {% for user in users %}
+        <tr>
+            <form method="POST" action="{{ url_for('main.edit_user', user_id=user.id) }}">
+              <td>{{ user.first }}</td>
+              <td>{{ user.last }}</td>
+              <td>{{ user.username }}</td>
+              <td><input type="text" name="email" value="{{ user.email }}"></td>
+              <td>{{ user.role }}</td>
+              <td>
+                <button type="submit" name="action" value="update_email">Update Email</button>
+                <button type="submit" name="action" value="toggle_role">Update Role</button>
+              </td>
+            </form>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <h2> JOB DATA</h2>
+    <table border="1">
+    <tr>
+        <th>ID</th>
+        <th>User</th>
+        <th>Part Name</th>
+        <th>Num Batches</th>
+        <th>Num Per Batch</th>
+        <th>Task</th>
+        <th>Paint Type</th>
+        <th>Total Time (s)</th>
+        <th>Avg Time/Batch (s)</th>
+        <th>Avg Time/Part (s)</th>
+        <th>Date</th>
+    </tr>
+    {% for job in jobs %}
+    <tr>
+        <td>{{ job.id }}</td>
+        <td>{{ job.user.username }}</td>
+        <td>{{ job.part_name }}</td>
+        <td>{{ job.num_batches }}</td>
+        <td>{{ job.num_per_batch }}</td>
+        <td>{{ job.task }}</td>
+        <td>{{ job.paint_type }}</td>
+        <td>{{ job.total_time }}</td>
+        <td>{{ job.avg_time_per_batch }}</td>
+        <td>{{ job.avg_time_per_part }}</td>
+        <td>{{ job.date.strftime('%Y-%m-%d') }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+
+  <h2> PART DATA</h2>
+  <table border="1">
+    <tr>
+        <th>ID</th>
+        <th>Part Name</th>
+        <th>Surface Area</th>
+    </tr>
+    {% for part in parts %}
+    <tr>
+        <td>{{ part.id }}</td>
+        <td>{{ part.part_name }}</td>
+        <td>{{ part.surface_area }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+    
+  </body>
