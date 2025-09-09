@@ -35,7 +35,7 @@ This project is a Flask-based web application, designed for internal use at JOT 
 - extensions.py — Flask extensions (db, bcrypt, login manager)
 - config.py — Configuration settings
 - templates — HTML templates organized by feature (/auth contains pages related to log in, registration, and password reset; /dash contains user and admin dashboards; /data contains the pages for job data collection, estimation, adding new parts and data overview; /errors contains error notification pages).
-- static — Static files (CSS, JS)
+
 
 ### License
 This project is licensed under the [MIT License](LICENSE).
