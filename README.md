@@ -27,7 +27,7 @@ This project is a Flask-based web application, designed for internal use at JOT 
 5. Run the application:
    ```flask run```
 
-### File Structure
+### Application File Structure
 - app.py — Main application setup
 - models.py — Database models (User, Part, Job)
 - forms.py — WTForms classes
