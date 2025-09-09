@@ -2,5 +2,10 @@ Flask
 Flask-WTF
 Flask-SQLAlchemy
 Flask-Login
+Flask-Mailman
+Flask-Bcrypt
 WTForms
 python-dotenv
+itsdangerous
+pandas
+
