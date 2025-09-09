@@ -1,2 +1,0 @@
-date,part_id,num_batches,num_per_batch,task,paint_type,total_time,avg_time_per_batch,avg_time_per_part
-2025-08-21,1,3,12,paint,powder,0:00:13.896891,0:00:04.632297,0:00:00.386025
